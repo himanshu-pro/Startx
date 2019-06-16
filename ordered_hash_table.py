@@ -5,6 +5,14 @@ from bisect import bisect_left
 Element = namedtuple('Node', ['key_hash', 'item'])
 
 
+# list.index doesn't assume ordering.. This does and consequently performs better..
+def ordered_index(arr: List[int], x: int) -> int:
+    i = bisect_left(arr, x)
+    if i == len(arr) or arr[i] != x:
+        raise ValueError('key not found')
+    return i
+
+
 class OrderedHashTable:
     def __init__(self, capacity=1000):
         self.capacity = capacity
@@ -15,7 +23,7 @@ class OrderedHashTable:
     def get(self, key: Hashable) -> Any:
         key_hash = hash(key)
         bucket_num = self._get_bucket_num(key_hash)
-        return self.buckets[bucket_num][self._get_hashes(bucket_num).index(key_hash)].item
+        return self.buckets[bucket_num][ordered_index(self._get_hashes(bucket_num), key_hash)].item
 
     def put(self, key: Hashable, item: Any) -> NoReturn:
         key_hash = hash(key)
@@ -34,7 +42,7 @@ class OrderedHashTable:
     def remove(self, key: Hashable) -> Element:
         key_hash = hash(key)
         bucket_num = self._get_bucket_num(key_hash)
-        return self.buckets[bucket_num].pop(self._get_hashes(bucket_num).index(key_hash))
+        return self.buckets[bucket_num].pop(ordered_index(self._get_hashes(bucket_num), key_hash))
 
     def _get_bucket_num(self, key_hash: int) -> int:
         return key_hash % self.capacity
